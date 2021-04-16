@@ -87,8 +87,20 @@ const resolvers = {
         token: "token",
       };
     },
+    signIn: async (_, { input }, { db }) => {
+      const user = await db.collection("Users").findOne({ email: input.email });
+      const isPasswordCorrect =
+        user && bcrypt.compareSync(input.password, user.password);
 
-    // SignIn: () => {},
+      if (!user || !isPasswordCorrect) {
+        throw new Error("Invalid credentials!");
+      }
+      console.log(user);
+      return {
+        user,
+        token: "token",
+      };
+    },
   },
   User: {
     id: (root) => {
