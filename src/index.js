@@ -209,15 +209,14 @@ const resolvers = {
       taskList.userIds.push(ObjectID(userId));
       return taskList;
     },
-
+    // ToDo Items
     createToDo: async (_, { content, taskListId }, { db, user }) => {
       if (!user) {
         throw new Error("Authentication Error. Please sign in");
       }
-
       const newToDo = {
         content,
-        taskListId,
+        taskListId: ObjectID(taskListId),
         isCompleted: false,
       };
       const result = await db.collection("ToDo").insert(newToDo);
@@ -240,6 +239,11 @@ const resolvers = {
       Promise.all(
         userIds.map((userId) => db.collection("Users").findOne({ _id: userId }))
       ),
+    todos: async ({ _id }, _, { db }) =>
+      await db
+        .collection("ToDo")
+        .find({ taskListId: ObjectID(_id) })
+        .toArray(),
   },
   ToDo: {
     id: ({ _id, id }) => _id || id,
