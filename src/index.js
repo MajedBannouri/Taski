@@ -49,6 +49,9 @@ const typeDefs = gql`
     updateTaskList(id: ID!, title: String!): TaskList!
     deleteTaskList(id: ID!): Boolean!
     addUserToTaskList(taskListId: ID!, userId: ID!): TaskList!
+
+    # CRUD: ToDo
+    createToDo(content: String!, taskListId: ID!): ToDo!
   }
 
   # SIGNUP Input
@@ -110,6 +113,7 @@ const resolvers = {
       return await db.collection("TaskList").findOne({ _id: ObjectID(id) });
     },
   },
+
   Mutation: {
     signUp: async (_, { input }, { db }) => {
       const hashedPassword = bcrypt.hashSync(input.password);
@@ -205,7 +209,22 @@ const resolvers = {
       taskList.userIds.push(ObjectID(userId));
       return taskList;
     },
+
+    createToDo: async (_, { content, taskListId }, { db, user }) => {
+      if (!user) {
+        throw new Error("Authentication Error. Please sign in");
+      }
+
+      const newToDo = {
+        content,
+        taskListId,
+        isCompleted: false,
+      };
+      const result = await db.collection("ToDo").insert(newToDo);
+      return result.ops[0];
+    },
   },
+
   User: {
     id: (root) => {
       return root._id;
@@ -221,6 +240,11 @@ const resolvers = {
       Promise.all(
         userIds.map((userId) => db.collection("Users").findOne({ _id: userId }))
       ),
+  },
+  ToDo: {
+    id: ({ _id, id }) => _id || id,
+    taskList: async ({ taskListId }, _, { db }) =>
+      await db.collection("TaskList").findOne({ _id: ObjectID(taskListId) }),
   },
 };
 
