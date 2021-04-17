@@ -90,7 +90,16 @@ const typeDefs = gql`
 // RESOLVERS
 const resolvers = {
   Query: {
-    myTaskLists: () => [],
+    myTaskLists: async (_, __, { db, user }) => {
+      if (!user) {
+        throw new Error("Authentication Error. Please sign in");
+      }
+      console.log(user._id);
+      return await db
+        .collection("TaskList")
+        .find({ userIds: user._id })
+        .toArray();
+    },
   },
   Mutation: {
     signUp: async (_, { input }, { db }) => {
