@@ -46,6 +46,7 @@ const typeDefs = gql`
     # CRUD: TaskList
     createTaskList(title: String!): TaskList!
     updateTaskList(id: ID!, title: String!): TaskList!
+    deleteTaskList(id: ID!): Boolean!
   }
 
   # SIGNUP Input
@@ -95,7 +96,6 @@ const resolvers = {
       if (!user) {
         throw new Error("Authentication Error. Please sign in");
       }
-      console.log(user._id);
       return await db
         .collection("TaskList")
         .find({ userIds: user._id })
@@ -159,6 +159,14 @@ const resolvers = {
       );
 
       return await db.collection("TaskList").findOne({ _id: ObjectID(id) });
+    },
+    deleteTaskList: async (_, { id }, { db, user }) => {
+      if (!user) {
+        throw new Error("Authentication Error. Please sign in");
+      }
+
+      await db.collection("TaskList").removeOne({ _id: ObjectID(id) });
+      return true;
     },
   },
   User: {
